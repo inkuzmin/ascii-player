@@ -1,0 +1,35 @@
+/**
+ * Created by JetBrains PhpStorm.
+ * User: inkuzmin
+ * Date: 7/1/13
+ * Time: 3:27 AM
+ */
+
+.player {
+    font-family: "Courier New", Courier;
+    clear: both;
+}
+
+.player div {
+    float: left;
+}
+
+.ctrl {
+    cursor: pointer;
+}
+.ctrl:hover {
+    color: grey;
+}
+
+.separator {
+    margin: 0 10px;
+}
+.tip {
+}
+
+.vol:hover {
+    color: red;
+}
+.prog:hover {
+    color: red;
+}
