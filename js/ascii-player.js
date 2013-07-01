@@ -25,9 +25,12 @@ A.prototype = {
         var self = this;
 
         self._initVars();
+        self._initAudio();
         self._render();
         self._getElements();
         self._bindHandlers();
+
+        self._setVolumeLevel(0.75);
 
     },
     _initVars: function () {
@@ -37,10 +40,17 @@ A.prototype = {
         self.title = self.options.title;
         self.id = self.el.id;
     },
+    _initAudio: function () {
+        var self = this;
+        self.audio = new Audio();
+        self.audio.setAttribute('src', self.src);
+//        self.audio.setAttribute('type', 'audio/mpeg');
+        self.audio.setAttribute('preload', true);
+//        self.audio.load();
+    },
     _render: function () {
         var self = this;
         var templ = '<div class="player" id="player' + self.id + '">' +
-                    '   <audio src="' + self.src + '" id="audio' + self.id + '">' + '</audio>' +
                     '   <div class="ctrl play-btn" id="play' + self.id + '">' +
                     '       <div>' + A.S.l + '</div>' +
                     '       <div id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
@@ -49,16 +59,17 @@ A.prototype = {
                     '   <div class="separator">' + A.S.s + '</div>' +
                     '   <div class="ctrl progress">' +
                     '       <div>' + A.S.l + '</div>' +
-                            self._renderProgress(10) +
+                    '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
                     '       <div>' + A.S.r + '</div>' +
-                    '       <div id="time' + self.id + '">00:00</div>' +
+                    '       <div id="time' + self.id + '">88:88</div>' +
                     '   </div>' +
                     '   <div class="separator">' + A.S.s + '</div>' +
-                    '   <div class="tip">Громк.:</div>' +
+                    '   <div class="tip">Vol.:</div>' +
                     '   <div class="ctrl volume">' +
                     '       <div>' + A.S.l + '</div>' +
-                            self._renderVolume(5) +
+                    '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
                     '       <div>' + A.S.r + '</div>' +
+                    '       <div id="level' + self.id + '">88%</div>' +
                     '   </div>' +
                     '   <div class="separator">' + A.S.s + '</div>' +
                     '   <div class="tip">' +
@@ -74,39 +85,156 @@ A.prototype = {
     _setTime: function () {
         var self = this;
         var time = self._timeFormat(self.audio.duration - self.audio.currentTime);
-        self.time.innerHTML = time;
+        self.timeNode.innerHTML = time;
+    },
+    _setVolumeLevel: function (volumeLevel) {
+        var self = this;
+        volumeLevel = volumeLevel;
+        self._setVolumePimpa(volumeLevel);
+
+        self.audio.volume = volumeLevel;
+        volumeLevel = (volumeLevel*100) + '%';
+        self.levelNode.innerHTML = volumeLevel;
+    },
+    _setVolumePimpa: function (volumeLevel) {
+        var self = this;
+
+        var length = self.vols.length;
+        var vols = self.vols.nodes;
+
+        var num = Math.floor((length-1)*volumeLevel);
+
+        vols[num].innerHTML = A.S.o;
+        vols[num].className = 'vol active';
+    },
+
+    _setProgressPosition: function (secs) {
+        var self = this;
+        self._setProgressPimpa(secs);
+
+//        self.audio.currentTime = secs;
+//        self.timeNode.innerHTML = self._timeFormat(secs);
+    },
+    _setProgressPimpa: function (secs) {
+        var self = this;
+
+        var length = self.progs.length;
+        var progs = self.progs.nodes;
+
+        var num = Math.floor(((length-1)*secs)/self.audio.duration);
+
+        for (;length--;) {
+            progs[length].innerHTML = A.S.u;
+            progs[length].className = 'prog';
+        }
+        progs[num].innerHTML = A.S.o;
+        progs[num].className = 'prog active';
     },
     _getElements: function () {
         var self = this,
             d = document;
-        self.player = d.getElementById('player' + self.id);
-        self.audio = d.getElementById('audio' + self.id);
-        self.play = d.getElementById('play' + self.id);
-        self.playSymbol = d.getElementById('play-symbol' + self.id);
-        self.time = d.getElementById('time' + self.id);
+        self.playerNode = d.getElementById('player' + self.id);
+        self.playNode = d.getElementById('play' + self.id);
+        self.playSymbolNode = d.getElementById('play-symbol' + self.id);
+        self.timeNode = d.getElementById('time' + self.id);
+        self.levelNode = d.getElementById('level' + self.id);
 
+        self.progressNode = d.getElementById('progress' + self.id);
+        self.volumeNode = d.getElementById('volume' + self.id);
+
+//        self.playerNode.appendChild(self.audio);
+
+        self._getVols();
+        self._getProgs();
+    },
+    _getVols: function () {
+        var self = this;
+        var vols = self.volumeNode.childNodes;
+        var len = vols.length;
+        self.vols = {
+            nodes: vols,
+            length: len
+        };
+    },
+    _getProgs: function () {
+        var self = this;
+        var progs = self.progressNode.childNodes;
+        var len = progs.length;
+        self.progs = {
+            nodes: progs,
+            length: len
+        };
     },
     _bindHandlers: function () {
         var self = this;
-        self.play.addEventListener('click', function () {
+        self.playNode.addEventListener('click', function () {
             self._play();
         }, false);
+
+
+        self.volumeNode.addEventListener('mousedown', function (e) {
+            self._changeVolume(e.target);
+        }, false);
+
+        self.progressNode.addEventListener('mousedown', function (e) {
+            self._changeProgress(e.target);
+        }, false);
+
 
         self.audio.addEventListener('durationchange', function () {
             self._setTime();
         }, false);
         self.audio.addEventListener('timeupdate', function () {
             self._setTime();
+            self._setProgressPosition(self.audio.currentTime);
         }, false);
+
+
+    },
+    _changeVolume: function (clickedNode) {
+        var self = this;
+        var length = self.vols.length;
+        var vols = self.vols.nodes;
+
+        var unit = 1/(length-1);
+        for (var i = 0; i < length; i += 1) {
+            if (vols[i].className === 'vol active') {
+                vols[i].innerHTML = A.S.u;
+                vols[i].className = 'vol';
+            }
+            if (vols[i] === clickedNode) {
+                vols[i].className = 'vol active';
+
+                self._setVolumeLevel(i*unit);
+            }
+        }
+    },
+    _changeProgress: function (clickedNode) {
+        var self = this;
+//        var length = self.vols.length;
+//        var vols = self.vols.nodes;
+//
+//        var unit = 1/(length-1);
+//        for (var i = 0; i < length; i += 1) {
+//            if (vols[i].className === 'vol active') {
+//                vols[i].innerHTML = A.S.u;
+//                vols[i].className = 'vol';
+//            }
+//            if (vols[i] === clickedNode) {
+//                vols[i].className = 'vol active';
+//
+//                self._setVolumeLevel(i*unit);
+//            }
+//        }
     },
     _play: function () {
         var self = this;
         if (self.audio.paused) {
             self.audio.play();
-            self.playSymbol.innerHTML = A.S.q;
+            self.playSymbolNode.innerHTML = A.S.q;
         } else {
             self.audio.pause();
-            self.playSymbol.innerHTML = A.S.p;
+            self.playSymbolNode.innerHTML = A.S.p;
         }
 
     },
@@ -124,11 +252,12 @@ A.prototype = {
 
         return min + ':' + sec;
     },
-    _renderVolume: function (l) {
+    _renderVolume: function (total) {
         var self = this;
         var volume = [];
-        for (;l--;) {
-            volume.push('<div class="vol">' + A.S.u + '</div>');
+        for (var i = 0; i < total; i += 1) {
+            var percent = Math.floor(100/(total-1) * i);
+            volume.push('<div class="vol" title="' + percent + '%">' + A.S.u + '</div>');
         }
         return volume.join('');
     },
