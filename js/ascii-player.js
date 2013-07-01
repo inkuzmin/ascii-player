@@ -129,8 +129,14 @@ A.prototype = {
             self._removeClass(progs[length], 'active');
 
         }
-        progs[num].innerHTML = A.S.o;
-        self._addClass(progs[num], 'active');
+        if (num !== self.progs.length) {
+            progs[num].innerHTML = A.S.o;
+            self._addClass(progs[num], 'active');
+        }
+        else {
+            self._play();
+            self._play();
+        }
 
     },
     _getElements: function () {
@@ -249,24 +255,28 @@ A.prototype = {
     },
     _changeProgress: function (clickedNode) {
         var self = this;
-        var length = self.progs.length;
-        var progs = self.progs.nodes;
-        var current;
+        try {
+            var length = self.progs.length;
+            var progs = self.progs.nodes;
+            var current;
 
-        var unit = self.audio.duration/(length);
-        for (var i = 0; i < length; i += 1) {
-            if (progs[i] === clickedNode) {
-                if (i > self.buff) {
-                    return;
+            var unit = self.audio.duration/(length);
+            for (var i = 0; i < length; i += 1) {
+                if (progs[i] === clickedNode) {
+                    if (i > self.buff) {
+                        return;
+                    }
+                    else {
+                        current = i;
+                        self._addClass(progs[i], 'active');
+                        self.audio.currentTime = i*unit + 0.1;
+                    }
                 }
-                else {
-                    current = i;
-                    self._addClass(progs[i], 'active');
-                    self.audio.currentTime = i*unit + 0.1;
-                }
+
+
             }
-
-
+        } catch (err) {
+            console.log('Does not loaded!');
         }
     },
     _play: function () {
