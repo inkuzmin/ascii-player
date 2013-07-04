@@ -4,12 +4,21 @@
  * Date: 7/1/13
  * Time: 3:27 AM
  */
-body {
-    background-color: black;
-    color: grey;
-}
-.player {
+
+
+.player-container {
     font-family: "Courier New", Courier;
+    display: inline-block;
+    position: relative;
+    /*top: 5px;*/
+    /*overflow: hidden;*/
+    height: 1em;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.player {
     clear: both;
 }
 

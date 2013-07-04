@@ -36,9 +36,9 @@ A.prototype = {
     },
     _initVars: function () {
         var self = this;
-        self.src = self.el.src;
-        self.artist = self.options.artist;
-        self.title = self.options.title;
+        self.src = self.el.title;
+        self.artist = self.options.artist || 'Artist';
+        self.title = self.options.title || 'Title';
         self.id = self.el.id;
     },
     _initAudio: function () {
@@ -60,7 +60,7 @@ A.prototype = {
                     '   <div class="separator">' + A.S.s + '</div>' +
                     '   <div class="ctrl progress">' +
                     '       <div>' + A.S.l + '</div>' +
-                    '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
+                    '       <div id="progress' + self.id + '">' + self._renderProgress(25) + '</div>' +
                     '       <div id="time' + self.id + '">00:00</div>' +
                     '       <div>' + A.S.r + '</div>' +
                     '   </div>' +
@@ -68,7 +68,7 @@ A.prototype = {
                     '   <div class="tip">Vol.:</div>' +
                     '   <div class="ctrl volume">' +
                     '       <div>' + A.S.l + '</div>' +
-                    '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
+                    '       <div id="volume' + self.id + '">' + self._renderVolume(7) + '</div>' +
                     '       <div id="level' + self.id + '">88%</div>' +
                     '       <div>' + A.S.r + '</div>' +
                     '   </div>' +
@@ -80,6 +80,7 @@ A.prototype = {
                     '   </div>' +
                     '</div>';
         var container = document.createElement('div');
+        container.className = 'player-container';
         container.innerHTML = templ;
         self._replaceElement(self.el, container);
     },
@@ -94,7 +95,15 @@ A.prototype = {
         self._setVolumePimpa(volumeLevel);
 
         self.audio.volume = volumeLevel;
-        volumeLevel = (volumeLevel*100) + '%';
+        if (volumeLevel === 1) {
+            volumeLevel = 'max';
+        }
+        else if (volumeLevel === 0) {
+            volumeLevel = 'min';
+        }
+        else {
+            volumeLevel = Math.floor(volumeLevel*100) + '%';
+        }
         self.levelNode.innerHTML = volumeLevel;
     },
     _setVolumePimpa: function (volumeLevel) {
@@ -354,6 +363,6 @@ A.S = {
     u: '-', // ordinary unit
     w: '–', // before buffered
     s: '|', // separator
-    d: '&nbsp;—&nbsp;', // artist delimiter
+    d: '&nbsp;&mdash;&nbsp;', // artist delimiter
     o: 'o' // pimpa
 };
