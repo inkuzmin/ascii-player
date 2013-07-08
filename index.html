@@ -19,6 +19,7 @@
             title: 'World'
         });</script>
 
+<br />
 <div id="adsfdsakfjaskd"
        title="http://august4u.org/1.mp3"></div>
 <script>Y = new
@@ -28,6 +29,7 @@
             title: 'Мир'
         });</script>
 
+<br />
 <div id="adsfdsakfjaskg" title="./mp3/b057b3df14a8.mp3"></div>
 <script>Z = new
         ASCIIPlayer(document.getElementById('adsfdsakfjaskg'),
@@ -35,6 +37,9 @@
             artist: 'Konichiwa',
             title: 'Wasabi'
         });
+
+var audio = new Audio();
+console.log(!!audio.canPlayType('audio/mpeg; codecs="mp3"'));
 </script>
 
 </body>

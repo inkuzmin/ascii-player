@@ -5,25 +5,38 @@
  * Time: 3:27 AM
  */
 
+.myplayer {
+    color: royalBlue;
+    cursor: pointer;
+    border-bottom: 1px solid #84b1ff;
+}
+
+.myplayer:hover {
+    color: white;
+    border-bottom: 1px solid #efefef;
+}
 
 .player-container {
     font-family: "Courier New", Courier;
-    display: inline-block;
-    position: relative;
+    display: inline;
+    color: white;
+    font-size: 12px;
+    /*position: relative;*/
     /*top: 5px;*/
     /*overflow: hidden;*/
-    height: 1em;
+    /*height: 1em;*/
     border: 0;
     margin: 0;
     padding: 0;
 }
 
 .player {
-    clear: both;
+    display: inline;
+    /*clear: both;*/
 }
 
 .player div {
-    float: left;
+    display: inline-block;
 }
 
 .play {
@@ -44,6 +57,15 @@
     margin: 0 10px;
 }
 .tip {
+
+
+}
+
+div.delimiter {
+    display: none;
+}
+div.artist {
+    display: none;
 }
 
 .vol {
