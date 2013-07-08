@@ -5,6 +5,63 @@
  * Time: 3:27 AM
  */
 
+L = myListener = {
+    onInit: function() {
+//        this.position = 0;
+    },
+    onUpdate: function () {
+//        document.getElementById("info_playing").innerHTML = this.isPlaying;
+//        document.getElementById("info_url").innerHTML = this.url;
+//        document.getElementById("info_volume").innerHTML = this.volume;
+//        document.getElementById("info_position").innerHTML = this.position;
+//        document.getElementById("info_duration").innerHTML = this.duration;
+//        document.getElementById("info_bytes").innerHTML = this.bytesLoaded + "/" + this.bytesTotal + " (" + this.bytesPercent + "%)";
+//
+//        var isPlaying = (this.isPlaying == "true");
+//        document.getElementById("playerplay").style.display = (isPlaying)?"none":"block";
+//        document.getElementById("playerpause").style.display = (isPlaying)?"block":"none";
+//
+//        var timelineWidth = 160;
+//        var sliderWidth = 40;
+//        var sliderPositionMin = 40;
+//        var sliderPositionMax = sliderPositionMin + timelineWidth - sliderWidth;
+//        var sliderPosition = sliderPositionMin + Math.round((timelineWidth - sliderWidth) * this.position / this.duration);
+//
+//        if (sliderPosition < sliderPositionMin) {
+//            sliderPosition = sliderPositionMin;
+//        }
+//        if (sliderPosition > sliderPositionMax) {
+//            sliderPosition = sliderPositionMax;
+//        }
+//
+//        document.getElementById("playerslider").style.left = sliderPosition+"px";
+    },
+    getFlashObject: function () {
+//        return document.getElementById("myFlash");
+    },
+    play: function () {
+//        if (myListener.position == 0) {
+//            getFlashObject().SetVariable("method:setUrl", "/medias/another_world.mp3");
+//        }
+//        getFlashObject().SetVariable("method:play", "");
+//        getFlashObject().SetVariable("enabled", "true");
+    },
+    pause: function () {
+//        getFlashObject().SetVariable("method:pause", "");
+    },
+    stop: function () {
+//        getFlashObject().SetVariable("method:stop", "");
+    },
+    setPosition: function () {
+//        var position = document.getElementById("inputPosition").value;
+//        getFlashObject().SetVariable("method:setPosition", position);
+    },
+    setVolume: function () {
+//        var volume = document.getElementById("inputVolume").value;
+//        getFlashObject().SetVariable("method:setVolume", volume);
+    }
+};
+
 A = ASCIIPlayer = function (el, options) {
     var self = this;
     self.el = el;
@@ -43,43 +100,72 @@ A.prototype = {
     },
     _initAudio: function () {
         var self = this;
+
+
         self.audio = new Audio();
         self.audio.setAttribute('src', self.src + '?rand=' + Math.random());
 //        self.audio.setAttribute('type', 'audio/mpeg');
         self.audio.setAttribute('preload', 'none');
 //        self.audio.load();
+
+        console.log(self._isAudioSuppored());
+
+
+    },
+    _isAudioSuppored: function () {
+        var self = this;
+        var audio = new Audio();
+        audio.src = 'http://august4u.org/1.mp3';
+        try {
+            audio.load();
+        }
+        catch (err) {
+            return false;
+        }
+
+        return !!audio.canPlayType('audio/mp3');
     },
     _render: function () {
         var self = this;
-        var templ = '<div class="player" id="player' + self.id + '">' +
+        var flashAudio = ''
+
+        if (!self._isAudioSuppored) {
+            flashAudio = '<object class="playerpreview" id="myFlash" type="application/x-shockwave-flash" data="flash/player_mp3_js.swf" width="1" height="1">' +
+                '<param name="movie" value="/medias/player_mp3_js.swf">' +
+                '<param name="AllowScriptAccess" value="always">' +
+                '<param name="FlashVars" value="listener=myListener&amp;interval=500">' +
+            '</object>';
+        }
+        var templ = flashAudio +
+                    '<div class="player" id="player' + self.id + '">' +
                     '   <div class="ctrl play-btn" id="play' + self.id + '">' +
                     '       <div>' + A.S.l + '</div>' +
                     '       <div class="play" id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
                     '       <div>' + A.S.r + '</div>' +
                     '   </div>' +
-                    '   <div class="separator">' + A.S.s + '</div>' +
                     '   <div class="ctrl progress">' +
+                    '       <div class="separator">' + A.S.s + '</div>' +
                     '       <div>' + A.S.l + '</div>' +
-                    '       <div id="progress' + self.id + '">' + self._renderProgress(25) + '</div>' +
+                    '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
                     '       <div id="time' + self.id + '">00:00</div>' +
                     '       <div>' + A.S.r + '</div>' +
                     '   </div>' +
-                    '   <div class="separator">' + A.S.s + '</div>' +
-                    '   <div class="tip">Vol.:</div>' +
                     '   <div class="ctrl volume">' +
+                    '       <div class="separator">' + A.S.s + '</div>' +
+                    '       <div class="tip">Vol.:</div>' +
                     '       <div>' + A.S.l + '</div>' +
-                    '       <div id="volume' + self.id + '">' + self._renderVolume(7) + '</div>' +
+                    '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
                     '       <div id="level' + self.id + '">88%</div>' +
                     '       <div>' + A.S.r + '</div>' +
                     '   </div>' +
-                    '   <div class="separator">' + A.S.s + '</div>' +
                     '   <div class="tip">' +
-                    '       <div>' + self.artist + '</div>' +
-                    '       <div>' + A.S.d + '</div>' +
-                    '       <div>' + self.title + '</div>' +
+                    '       <div class="separator">' + A.S.s + '</div>' +
+                    '       <div class="artist">' + self.artist + '</div>' +
+                    '       <div class="delimiter">' + A.S.d + '</div>' +
+                    '       <div class="title">' + self.title + '</div>' +
                     '   </div>' +
                     '</div>';
-        var container = document.createElement('div');
+        var container = document.createElement('p');
         container.className = 'player-container';
         container.innerHTML = templ;
         self._replaceElement(self.el, container);
@@ -202,19 +288,21 @@ A.prototype = {
         }, false);
 
 
-        self.audio.addEventListener('canplay', function () {
-//            self._play();
-//            self._play();
-            self._bufferisation();
-        }, false);
-        self.audio.addEventListener('timeupdate', function () {
-            self._setTime();
-            self._setProgressPosition(self.audio.currentTime);
-        }, false);
+        if (self._isAudioSuppored()) {
+            self.audio.addEventListener('canplay', function () {
+    //            self._play();
+    //            self._play();
+                self._bufferisation();
+            }, false);
+            self.audio.addEventListener('timeupdate', function () {
+                self._setTime();
+                self._setProgressPosition(self.audio.currentTime);
+            }, false);
 
-        self.audio.addEventListener('pause', function () {
-//            self._play();
-        }, false);
+            self.audio.addEventListener('pause', function () {
+    //            self._play();
+            }, false);
+        }
 
 
     },
