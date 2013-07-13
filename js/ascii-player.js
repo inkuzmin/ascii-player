@@ -5,11 +5,21 @@
  * Time: 3:27 AM
  */
 
-L = myListener = {
-    onInit: function() {
-//        this.position = 0;
+
+if (typeof Object.create !== 'function') {
+    Object.create = function (o) {
+        function F() {}
+        F.prototype = o;
+        return new F();
+    };
+}
+
+L = {
+    onInit: function () {
+        this.position = 0;
+        this.paused = true;
     },
-    onUpdate: function () {
+    onUpdate:function () {
 //        document.getElementById("info_playing").innerHTML = this.isPlaying;
 //        document.getElementById("info_url").innerHTML = this.url;
 //        document.getElementById("info_volume").innerHTML = this.volume;
@@ -36,29 +46,30 @@ L = myListener = {
 //
 //        document.getElementById("playerslider").style.left = sliderPosition+"px";
     },
-    getFlashObject: function () {
-//        return document.getElementById("myFlash");
+    getFlashObject:function () {
+        return document.getElementById("myFlashFF");
     },
-    play: function () {
-//        if (myListener.position == 0) {
-//            getFlashObject().SetVariable("method:setUrl", "/medias/another_world.mp3");
-//        }
-//        getFlashObject().SetVariable("method:play", "");
-//        getFlashObject().SetVariable("enabled", "true");
+    play:function () {
+        if (this.position == 0) {
+            this.getFlashObject().SetVariable("method:setUrl", this.src);
+        }
+        this.getFlashObject().SetVariable("method:play", "");
+        this.getFlashObject().SetVariable("enabled", "true");
+
+        this.paused = false;
     },
-    pause: function () {
-//        getFlashObject().SetVariable("method:pause", "");
+    pause:function () {
+        this.getFlashObject().SetVariable("method:pause", "");
+
+        this.paused = true;
     },
-    stop: function () {
-//        getFlashObject().SetVariable("method:stop", "");
+    setPosition:function () {
+        var position = document.getElementById("inputPosition").value;
+        this.getFlashObject().SetVariable("method:setPosition", position);
     },
-    setPosition: function () {
-//        var position = document.getElementById("inputPosition").value;
-//        getFlashObject().SetVariable("method:setPosition", position);
-    },
-    setVolume: function () {
-//        var volume = document.getElementById("inputVolume").value;
-//        getFlashObject().SetVariable("method:setVolume", volume);
+    setVolume:function () {
+        var volume = document.getElementById("inputVolume").value;
+        this.getFlashObject().SetVariable("method:setVolume", volume);
     }
 };
 
@@ -69,8 +80,8 @@ A = ASCIIPlayer = function (el, options) {
     self._init();
 }
 A.prototype = {
-    constructor: ASCIIPlayer,
-    _obtainOptions: function (options) {
+    constructor:ASCIIPlayer,
+    _obtainOptions:function (options) {
         var self = this;
         self.options = {};
         for (var param in options) {
@@ -78,104 +89,110 @@ A.prototype = {
                 self.options[param] = options[param];
         }
     },
-    _init: function () {
+    _init:function () {
         var self = this;
 
         self._initVars();
-        self._initAudio();
         self._render();
+        self._initAudio();
         self._getElements();
-        self._addPlayer();
+
         self._bindHandlers();
 
-        self._setVolumeLevel(0.75);
+//        self._setVolumeLevel(self.initVolume);
 
     },
-    _initVars: function () {
+    _initVars:function () {
         var self = this;
         self.src = self.el.title;
         self.artist = self.options.artist || 'Artist';
         self.title = self.options.title || 'Title';
+        self.preload = self.options.preload || false;
+        self.initVolume = self.options.volume || 0.75;
         self.id = self.el.id;
+
+        self.n = A.N++;
     },
-    _initAudio: function () {
+    _initAudio:function () {
         var self = this;
 
+        if (self._isAudioSuppored()) {
+            self.audio = new Audio();
+            self.audio.setAttribute('src', self.src + '?rand=' + Math.random());
 
-        self.audio = new Audio();
-        self.audio.setAttribute('src', self.src + '?rand=' + Math.random());
-//        self.audio.setAttribute('type', 'audio/mpeg');
-        self.audio.setAttribute('preload', 'none');
-//        self.audio.load();
+            if (self.preload) {
+                self.audio.load();
+            } else {
+                self.audio.setAttribute('preload', 'none');
+            }
+        } else {
+            window['myListener' + self.n] = Object.create(L);
 
-        console.log(self._isAudioSuppored());
+            self.audio = window['myListener' + self.n];
+            self.audio.src = self.src;
 
 
-    },
-    _isAudioSuppored: function () {
-        var self = this;
-        var audio = new Audio();
-        audio.src = 'http://august4u.org/1.mp3';
-        try {
-            audio.load();
-        }
-        catch (err) {
-            return false;
         }
 
-        return !!audio.canPlayType('audio/mp3');
     },
-    _render: function () {
+    _isAudioSuppored:function () {
+        return false;
+        return !!new Audio().canPlayType('audio/mpeg') && (navigator.userAgent.match(/Chromium\/\d+/) === null);
+    },
+    _render:function () {
         var self = this;
         var flashAudio = ''
 
-        if (!self._isAudioSuppored) {
-            flashAudio = '<object class="playerpreview" id="myFlash" type="application/x-shockwave-flash" data="flash/player_mp3_js.swf" width="1" height="1">' +
-                '<param name="movie" value="/medias/player_mp3_js.swf">' +
+        if (!self._isAudioSuppored()) {
+            flashAudio = '<object class="playerpreview" id="myFlashFF" type="application/x-shockwave-flash" data="' + A.baseUrl + '/player_mp3_js.swf" width="0" height="0">' +
+                '<param name="movie" value="' + A.baseUrl + '/player_mp3_js.swf">' +
                 '<param name="AllowScriptAccess" value="always">' +
-                '<param name="FlashVars" value="listener=myListener&amp;interval=500">' +
-            '</object>';
+                '<param name="FlashVars" value="listener=myListener' + self.n + '&amp;interval=500">' +
+                '<PARAM NAME="BASE" VALUE="' + A.baseUrl + '">' +
+//                '<embed src="' + A.baseUrl + '/flash/player_mp3_js.swf" height="0" width="0" allowscriptaccess="always" id="myFlashFF" flashvars="listener=myListener' + self.n + '&amp;interval=500" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer">' +
+//                '</embed>';
+                '</object>';
         }
         var templ = flashAudio +
-                    '<div class="player" id="player' + self.id + '">' +
-                    '   <div class="ctrl play-btn" id="play' + self.id + '">' +
-                    '       <div>' + A.S.l + '</div>' +
-                    '       <div class="play" id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
-                    '       <div>' + A.S.r + '</div>' +
-                    '   </div>' +
-                    '   <div class="ctrl progress">' +
-                    '       <div class="separator">' + A.S.s + '</div>' +
-                    '       <div>' + A.S.l + '</div>' +
-                    '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
-                    '       <div id="time' + self.id + '">00:00</div>' +
-                    '       <div>' + A.S.r + '</div>' +
-                    '   </div>' +
-                    '   <div class="ctrl volume">' +
-                    '       <div class="separator">' + A.S.s + '</div>' +
-                    '       <div class="tip">Vol.:</div>' +
-                    '       <div>' + A.S.l + '</div>' +
-                    '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
-                    '       <div id="level' + self.id + '">88%</div>' +
-                    '       <div>' + A.S.r + '</div>' +
-                    '   </div>' +
-                    '   <div class="tip">' +
-                    '       <div class="separator">' + A.S.s + '</div>' +
-                    '       <div class="artist">' + self.artist + '</div>' +
-                    '       <div class="delimiter">' + A.S.d + '</div>' +
-                    '       <div class="title">' + self.title + '</div>' +
-                    '   </div>' +
-                    '</div>';
+            '<div class="player" id="player' + self.id + '">' +
+            '   <div class="ctrl play-btn" id="play' + self.id + '">' +
+            '       <div>' + A.S.l + '</div>' +
+            '       <div class="play" id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
+            '       <div>' + A.S.r + '</div>' +
+            '   </div>' +
+            '   <div class="ctrl progress">' +
+            '       <div class="separator">' + A.S.s + '</div>' +
+            '       <div>' + A.S.l + '</div>' +
+            '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
+            '       <div id="time' + self.id + '">00:00</div>' +
+            '       <div>' + A.S.r + '</div>' +
+            '   </div>' +
+            '   <div class="ctrl volume">' +
+            '       <div class="separator">' + A.S.s + '</div>' +
+            '       <div class="tip">Vol.:</div>' +
+            '       <div>' + A.S.l + '</div>' +
+            '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
+            '       <div id="level' + self.id + '">88%</div>' +
+            '       <div>' + A.S.r + '</div>' +
+            '   </div>' +
+            '   <div class="tip">' +
+            '       <div class="separator">' + A.S.s + '</div>' +
+            '       <div class="artist">' + self.artist + '</div>' +
+            '       <div class="delimiter">' + A.S.d + '</div>' +
+            '       <div class="title">' + self.title + '</div>' +
+            '   </div>' +
+            '</div>';
         var container = document.createElement('p');
         container.className = 'player-container';
         container.innerHTML = templ;
         self._replaceElement(self.el, container);
     },
-    _setTime: function () {
+    _setTime:function () {
         var self = this;
         var time = self._timeFormat(self.audio.duration - self.audio.currentTime);
         self.timeNode.innerHTML = time;
     },
-    _setVolumeLevel: function (volumeLevel) {
+    _setVolumeLevel:function (volumeLevel) {
         var self = this;
         volumeLevel = volumeLevel;
         self._setVolumePimpa(volumeLevel);
@@ -188,38 +205,38 @@ A.prototype = {
             volumeLevel = 'min';
         }
         else {
-            volumeLevel = Math.floor(volumeLevel*100) + '%';
+            volumeLevel = Math.floor(volumeLevel * 100) + '%';
         }
         self.levelNode.innerHTML = volumeLevel;
     },
-    _setVolumePimpa: function (volumeLevel) {
+    _setVolumePimpa:function (volumeLevel) {
         var self = this;
 
         var length = self.vols.length;
         var vols = self.vols.nodes;
 
-        var num = Math.floor((length-1)*volumeLevel);
+        var num = Math.floor((length - 1) * volumeLevel);
 
         vols[num].innerHTML = A.S.o;
         self._addClass(vols[num], 'active');
     },
 
-    _setProgressPosition: function (secs) {
+    _setProgressPosition:function (secs) {
         var self = this;
         self._setProgressPimpa(secs);
 
 //        self.audio.currentTime = secs;
 //        self.timeNode.innerHTML = self._timeFormat(secs);
     },
-    _setProgressPimpa: function (secs) {
+    _setProgressPimpa:function (secs) {
         var self = this;
 
         var length = self.progs.length;
         var progs = self.progs.nodes;
 
-        var num = Math.floor(((length)*secs)/self.audio.duration);
+        var num = Math.floor(((length) * secs) / self.audio.duration);
 
-        for (;length--;) {
+        for (; length--;) {
             progs[length].innerHTML = A.S.u;
             self._removeClass(progs[length], 'active');
 
@@ -234,7 +251,7 @@ A.prototype = {
         }
 
     },
-    _getElements: function () {
+    _getElements:function () {
         var self = this,
             d = document;
         self.playerNode = d.getElementById('player' + self.id);
@@ -248,65 +265,65 @@ A.prototype = {
 
         self._getVols();
         self._getProgs();
+
     },
-    _addPlayer: function () {
-        var self = this;
-        self.playerNode.appendChild(self.audio);
-//        self.audio.load();
-    },
-    _getVols: function () {
+
+    _getVols:function () {
         var self = this;
         var vols = self.volumeNode.childNodes;
         var len = vols.length;
         self.vols = {
-            nodes: vols,
-            length: len
+            nodes:vols,
+            length:len
         };
     },
-    _getProgs: function () {
+    _getProgs:function () {
         var self = this;
         var progs = self.progressNode.childNodes;
         var len = progs.length;
         self.progs = {
-            nodes: progs,
-            length: len
+            nodes:progs,
+            length:len
         };
     },
-    _bindHandlers: function () {
+    _bindHandlers:function () {
         var self = this;
+
+
         self.playNode.addEventListener('click', function () {
             self._play();
         }, false);
 
 
-        self.volumeNode.addEventListener('mousedown', function (e) {
-            self._changeVolume(e.target);
-        }, false);
-
-        self.progressNode.addEventListener('mousedown', function (e) {
-            self._changeProgress(e.target);
-        }, false);
-
-
-        if (self._isAudioSuppored()) {
-            self.audio.addEventListener('canplay', function () {
-    //            self._play();
-    //            self._play();
-                self._bufferisation();
-            }, false);
-            self.audio.addEventListener('timeupdate', function () {
-                self._setTime();
-                self._setProgressPosition(self.audio.currentTime);
-            }, false);
-
-            self.audio.addEventListener('pause', function () {
-    //            self._play();
-            }, false);
-        }
+//        self.volumeNode.addEventListener('mousedown', function (e) {
+//            self._changeVolume(e.target);
+//        }, false);
+//
+//        self.progressNode.addEventListener('mousedown', function (e) {
+//            self._changeProgress(e.target);
+//        }, false);
+//
+//
+//        if (self._isAudioSuppored()) {
+//            self.audio.addEventListener('canplay', function () {
+//                if (self.preload) {
+//                    self._play();
+//                    self._play();
+//                }
+//                self._bufferisation();
+//            }, false);
+//            self.audio.addEventListener('timeupdate', function () {
+//                self._setTime();
+//                self._setProgressPosition(self.audio.currentTime);
+//            }, false);
+//
+//            self.audio.addEventListener('pause', function () {
+//            }, false);
+//        }
 
 
     },
-    _bufferisation: function () {
+    _bufferisation:function () {
         var self = this;
         var interval = setInterval(function () {
             if (self._wasBuffered()) {
@@ -316,29 +333,29 @@ A.prototype = {
         }, 1000);
 
     },
-    _wasBuffered: function () {
+    _wasBuffered:function () {
         var self = this;
         return self.audio.buffered.end(0) === self.audio.duration;
     },
-    _paintProgressBar: function () {
+    _paintProgressBar:function () {
         var self = this;
         var d = self.audio.duration,
             b = self.audio.buffered.end(0),
             p = b / d,
             l = self.progs.length,
-            c = Math.floor(l*p),
+            c = Math.floor(l * p),
             i;
         for (i = 0; i < c; i += 1) {
             self._addClass(self.progs.nodes[i], 'buff');
         }
         self.buff = c;
     },
-    _changeVolume: function (clickedNode) {
+    _changeVolume:function (clickedNode) {
         var self = this;
         var length = self.vols.length;
         var vols = self.vols.nodes;
 
-        var unit = 1/(length-1);
+        var unit = 1 / (length - 1);
         for (var i = 0; i < length; i += 1) {
             if (self._hasClass(vols[i], 'active')) {
                 vols[i].innerHTML = A.S.u;
@@ -346,18 +363,18 @@ A.prototype = {
             }
             if (vols[i] === clickedNode) {
                 self._addClass(vols[i], 'active');
-                self._setVolumeLevel(i*unit);
+                self._setVolumeLevel(i * unit);
             }
         }
     },
-    _changeProgress: function (clickedNode) {
+    _changeProgress:function (clickedNode) {
         var self = this;
         try {
             var length = self.progs.length;
             var progs = self.progs.nodes;
             var current;
 
-            var unit = self.audio.duration/(length);
+            var unit = self.audio.duration / (length);
             for (var i = 0; i < length; i += 1) {
                 if (progs[i] === clickedNode) {
                     if (i > self.buff) {
@@ -366,7 +383,7 @@ A.prototype = {
                     else {
                         current = i;
                         self._addClass(progs[i], 'active');
-                        self.audio.currentTime = i*unit + 0.1;
+                        self.audio.currentTime = i * unit + 0.1;
                     }
                 }
 
@@ -376,7 +393,7 @@ A.prototype = {
             console.log('Does not loaded!');
         }
     },
-    _play: function () {
+    _play:function () {
         var self = this;
         if (self.audio.paused) {
             self.audio.play();
@@ -387,45 +404,46 @@ A.prototype = {
         }
 
     },
-    _timeFormat: function (secs) {
-        var hr  = Math.floor(secs / 3600);
-        var min = Math.floor((secs - (hr * 3600))/60);
-        var sec = Math.floor(secs - (hr * 3600) -  (min * 60));
+    _timeFormat:function (secs) {
+        var hr = Math.floor(secs / 3600);
+        var min = Math.floor((secs - (hr * 3600)) / 60);
+        var sec = Math.floor(secs - (hr * 3600) - (min * 60));
 
-        if (min < 10){
-          min = "0" + min;
+        if (min < 10) {
+            min = "0" + min;
         }
-        if (sec < 10){
-          sec  = "0" + sec;
+        if (sec < 10) {
+            sec = "0" + sec;
         }
 
         return min + ':' + sec;
     },
-    _renderVolume: function (total) {
+    _renderVolume:function (total) {
         var self = this;
         var volume = [];
         for (var i = 0; i < total; i += 1) {
-            var percent = Math.floor(100/(total-1) * i);
+            var percent = Math.floor(100 / (total - 1) * i);
             volume.push('<div class="vol" title="' + percent + '%">' + A.S.u + '</div>');
         }
         return volume.join('');
     },
-    _renderProgress: function (l) {
+    _renderProgress:function (l) {
         var self = this;
         var progress = [];
-        for (;l--;) {
+        for (; l--;) {
             progress.push('<div class="prog">' + A.S.u + '</div>');
         }
         return progress.join('');
     },
-    _replaceElement: function (oldEl, newEl) {
+    _replaceElement:function (oldEl, newEl) {
         var self = this;
         oldEl.parentNode.replaceChild(newEl, oldEl);
     },
-    _addClass: function (el, cl) {
-        el.className += ' ' + cl;
+    _addClass:function (el, cl) {
+        if (!this._hasClass(el, cl))
+            el.className += ' ' + cl;
     },
-    _removeClass: function (el, cl) {
+    _removeClass:function (el, cl) {
         var i, r = [],
             c = el.className.split(' ');
         for (i = 0; i < c.length; i += 1) {
@@ -435,7 +453,7 @@ A.prototype = {
         }
         el.className = r.join(' ');
     },
-    _hasClass: function (el, cl) {
+    _hasClass:function (el, cl) {
         if (el.className.indexOf(cl) > -1) {
             return true;
         }
@@ -444,13 +462,15 @@ A.prototype = {
 };
 
 A.S = {
-    l: '[', // left border
-    r: ']', // right border
-    p: '>', // play
-    q: '#', // pause
-    u: '-', // ordinary unit
-    w: '–', // before buffered
-    s: '|', // separator
-    d: '&nbsp;&mdash;&nbsp;', // artist delimiter
-    o: 'o' // pimpa
+    l:'[', // left border
+    r:']', // right border
+    p:'>', // play
+    q:'#', // pause
+    u:'-', // ordinary unit
+    w:'–', // before buffered
+    s:'|', // separator
+    d:'&nbsp;&mdash;&nbsp;', // artist delimiter
+    o:'o' // pimpa
 };
+A.baseUrl = '//inkuzmin.ru/~inkuzmin/ascii-player/flash';
+A.N = 0;
