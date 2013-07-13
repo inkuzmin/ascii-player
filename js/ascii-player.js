@@ -335,7 +335,8 @@ A.prototype = {
         oldEl.parentNode.replaceChild(newEl, oldEl);
     },
     _addClass: function (el, cl) {
-        el.className += ' ' + cl;
+        if (this._hasClass(el, cl))
+            el.className += ' ' + cl;
     },
     _removeClass: function (el, cl) {
         var i, r = [],
