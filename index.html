@@ -11,34 +11,18 @@
 <body>
 
 <div id="adsfdsakfjaskj"
-       title="http://bot.august4u.org/tracks/cf87e63efdbbfc459557e9d35737f780.mp3"></div>
-<script>X = new
+     data-url="mp3/8e57132ebc9bcdd68ac29cff61937e04"></div>
+<script>
+    var format = !!new Audio().canPlayType('audio/mpeg') && (navigator.userAgent.match(/Chromium\/\d+/) === null) ? 'mp3' : 'ogg';
+    X = new
         ASCIIPlayer(document.getElementById('adsfdsakfjaskj'),
         {
-            artist: 'Hello',
-            title: 'World'
-        });</script>
-
-<br />
-<div id="adsfdsakfjaskd"
-       title="http://bot.august4u.org/tracks/cf87e63efdbbfc459557e9d35737f780.mp3"></div>
-<script>Y = new
-        ASCIIPlayer(document.getElementById('adsfdsakfjaskd'),
-        {
-            artist: 'Привет',
-            title: 'Мир'
-        });</script>
-
-<br />
-<div id="adsfdsakfjaskg" title="./mp3/b057b3df14a8.mp3"></div>
-<script>Z = new
-        ASCIIPlayer(document.getElementById('adsfdsakfjaskg'),
-        {
-            artist: 'Konichiwa',
-            title: 'Wasabi',
-            preload: true
+            title: 'Jimi Hendrix – Earth Blues',
+            format: format
         });
 </script>
+
+<br />
 
 </body>
 </html>

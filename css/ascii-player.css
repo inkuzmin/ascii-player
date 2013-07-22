@@ -8,7 +8,7 @@
 .myplayer {
     color: royalBlue;
     cursor: pointer;
-    border-bottom: 1px solid #84b1ff;
+    border-bottom: 1px dotted #84b1ff;
 }
 
 .myplayer:hover {
@@ -30,6 +30,12 @@
     padding: 0;
 }
 
+.notifier {
+    font-family: "Courier New", Courier;
+    color: white;
+    font-size: 12px;
+}
+
 .player {
     display: inline;
     /*clear: both;*/
@@ -42,28 +48,42 @@
 .play {
     color: yellow;
 }
+
 .ctrl {
     cursor: pointer;
 }
+
 .ctrl:hover {
     color: white;
 }
 
 .buff {
     color: blue;
+    animation: holy 5s;
+    -webkit-animation: holy 5s;
+
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+}
+
+.passive {
+    color: grey;
+    animation: none;
+    -webkit-animation: none;
 }
 
 .separator {
     margin: 0 10px;
 }
-.tip {
 
+.tip {
 
 }
 
 div.delimiter {
     display: none;
 }
+
 div.artist {
     display: none;
 }
@@ -71,9 +91,33 @@ div.artist {
 .vol {
     color: green;
 }
+
 .vol:hover {
     color: red;
 }
+
 .prog:hover {
     color: red;
+}
+
+.notifier {
+    animation: holy 5s;
+    -webkit-animation: holy 5s;
+
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+}
+
+@keyframes holy {
+    0%   {color:red;}
+    25%  {color:yellow;}
+    50%  {color:blue;}
+    100% {color:green;}
+}
+
+@-webkit-keyframes holy {
+    0%   {color:red;}
+    25%  {color:yellow;}
+    50%  {color:blue;}
+    100% {color:green;}
 }

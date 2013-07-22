@@ -9,3 +9,15 @@ body {
     background-color: black;
     color: grey;
 }
+
+a {
+    color: #4169e1;
+    text-decoration: none;
+    border-bottom: #84b1ff 1px solid;
+}
+
+a:hover {
+    color: #e10608;
+    text-decoration: none;
+    border-bottom: #e55552 1px solid;
+}

@@ -5,74 +5,6 @@
  * Time: 3:27 AM
  */
 
-
-if (typeof Object.create !== 'function') {
-    Object.create = function (o) {
-        function F() {}
-        F.prototype = o;
-        return new F();
-    };
-}
-
-L = {
-    onInit: function () {
-        this.position = 0;
-        this.paused = true;
-    },
-    onUpdate:function () {
-//        document.getElementById("info_playing").innerHTML = this.isPlaying;
-//        document.getElementById("info_url").innerHTML = this.url;
-//        document.getElementById("info_volume").innerHTML = this.volume;
-//        document.getElementById("info_position").innerHTML = this.position;
-//        document.getElementById("info_duration").innerHTML = this.duration;
-//        document.getElementById("info_bytes").innerHTML = this.bytesLoaded + "/" + this.bytesTotal + " (" + this.bytesPercent + "%)";
-//
-//        var isPlaying = (this.isPlaying == "true");
-//        document.getElementById("playerplay").style.display = (isPlaying)?"none":"block";
-//        document.getElementById("playerpause").style.display = (isPlaying)?"block":"none";
-//
-//        var timelineWidth = 160;
-//        var sliderWidth = 40;
-//        var sliderPositionMin = 40;
-//        var sliderPositionMax = sliderPositionMin + timelineWidth - sliderWidth;
-//        var sliderPosition = sliderPositionMin + Math.round((timelineWidth - sliderWidth) * this.position / this.duration);
-//
-//        if (sliderPosition < sliderPositionMin) {
-//            sliderPosition = sliderPositionMin;
-//        }
-//        if (sliderPosition > sliderPositionMax) {
-//            sliderPosition = sliderPositionMax;
-//        }
-//
-//        document.getElementById("playerslider").style.left = sliderPosition+"px";
-    },
-    getFlashObject:function () {
-        return document.getElementById("myFlashFF");
-    },
-    play:function () {
-        if (this.position == 0) {
-            this.getFlashObject().SetVariable("method:setUrl", this.src);
-        }
-        this.getFlashObject().SetVariable("method:play", "");
-        this.getFlashObject().SetVariable("enabled", "true");
-
-        this.paused = false;
-    },
-    pause:function () {
-        this.getFlashObject().SetVariable("method:pause", "");
-
-        this.paused = true;
-    },
-    setPosition:function () {
-        var position = document.getElementById("inputPosition").value;
-        this.getFlashObject().SetVariable("method:setPosition", position);
-    },
-    setVolume:function () {
-        var volume = document.getElementById("inputVolume").value;
-        this.getFlashObject().SetVariable("method:setVolume", volume);
-    }
-};
-
 A = ASCIIPlayer = function (el, options) {
     var self = this;
     self.el = el;
@@ -93,95 +25,86 @@ A.prototype = {
         var self = this;
 
         self._initVars();
+
         self._render();
-        self._initAudio();
         self._getElements();
+
+        self._initAudio();
 
         self._bindHandlers();
 
-//        self._setVolumeLevel(self.initVolume);
+        self._setVolumeLevel(self.initVolume);
+
 
     },
     _initVars:function () {
         var self = this;
-        self.src = self.el.title;
+        self.src = self.el.getAttribute('data-url');
         self.artist = self.options.artist || 'Artist';
         self.title = self.options.title || 'Title';
         self.preload = self.options.preload || false;
         self.initVolume = self.options.volume || 0.75;
         self.id = self.el.id;
+        self.autoplay = self.options.autoplay || false;
+        self.replay = self.options.replay || false;
+
+        self.format = self.options.format || 'mp3';
 
         self.n = A.N++;
     },
     _initAudio:function () {
         var self = this;
 
-        if (self._isAudioSuppored()) {
-            self.audio = new Audio();
-            self.audio.setAttribute('src', self.src + '?rand=' + Math.random());
 
-            if (self.preload) {
-                self.audio.load();
-            } else {
-                self.audio.setAttribute('preload', 'none');
-            }
+        self.audio = new Audio();
+        self.audio.setAttribute('src', self.src + '.' + self.format + '?rand=' + Math.random());
+
+        if (self.preload) {
+            self.audio.load();
         } else {
-            window['myListener' + self.n] = Object.create(L);
-
-            self.audio = window['myListener' + self.n];
-            self.audio.src = self.src;
-
-
+            self.audio.setAttribute('preload', 'none');
         }
 
+        if (self.autoplay) {
+            self.audio.setAttribute('autoplay', 'autoplay');
+            self._play();
+        }
+
+
     },
-    _isAudioSuppored:function () {
-        return false;
-        return !!new Audio().canPlayType('audio/mpeg') && (navigator.userAgent.match(/Chromium\/\d+/) === null);
-    },
+
     _render:function () {
         var self = this;
-        var flashAudio = ''
 
-        if (!self._isAudioSuppored()) {
-            flashAudio = '<object class="playerpreview" id="myFlashFF" type="application/x-shockwave-flash" data="' + A.baseUrl + '/player_mp3_js.swf" width="0" height="0">' +
-                '<param name="movie" value="' + A.baseUrl + '/player_mp3_js.swf">' +
-                '<param name="AllowScriptAccess" value="always">' +
-                '<param name="FlashVars" value="listener=myListener' + self.n + '&amp;interval=500">' +
-                '<PARAM NAME="BASE" VALUE="' + A.baseUrl + '">' +
-//                '<embed src="' + A.baseUrl + '/flash/player_mp3_js.swf" height="0" width="0" allowscriptaccess="always" id="myFlashFF" flashvars="listener=myListener' + self.n + '&amp;interval=500" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer">' +
-//                '</embed>';
-                '</object>';
-        }
-        var templ = flashAudio +
+        var templ =
             '<div class="player" id="player' + self.id + '">' +
-            '   <div class="ctrl play-btn" id="play' + self.id + '">' +
-            '       <div>' + A.S.l + '</div>' +
-            '       <div class="play" id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
-            '       <div>' + A.S.r + '</div>' +
-            '   </div>' +
-            '   <div class="ctrl progress">' +
-            '       <div class="separator">' + A.S.s + '</div>' +
-            '       <div>' + A.S.l + '</div>' +
-            '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
-            '       <div id="time' + self.id + '">00:00</div>' +
-            '       <div>' + A.S.r + '</div>' +
-            '   </div>' +
-            '   <div class="ctrl volume">' +
-            '       <div class="separator">' + A.S.s + '</div>' +
-            '       <div class="tip">Vol.:</div>' +
-            '       <div>' + A.S.l + '</div>' +
-            '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
-            '       <div id="level' + self.id + '">88%</div>' +
-            '       <div>' + A.S.r + '</div>' +
-            '   </div>' +
-            '   <div class="tip">' +
-            '       <div class="separator">' + A.S.s + '</div>' +
-            '       <div class="artist">' + self.artist + '</div>' +
-            '       <div class="delimiter">' + A.S.d + '</div>' +
-            '       <div class="title">' + self.title + '</div>' +
-            '   </div>' +
-            '</div>';
+                '   <div class="ctrl play-btn" id="play' + self.id + '">' +
+                '       <div>' + A.S.l + '</div>' +
+                '       <div class="play" id="play-symbol' + self.id + '">' + A.S.p + '</div>' +
+                '       <div>' + A.S.r + '</div>' +
+                '   </div>' +
+                '   <div class="ctrl progress">' +
+                '       <div class="separator">' + A.S.s + '</div>' +
+                '       <div>' + A.S.l + '</div>' +
+                '       <div id="progress' + self.id + '">' + self._renderProgress(20) + '</div>' +
+                '       <div id="time' + self.id + '">00:00</div>' +
+                '       <div>' + A.S.r + '</div>' +
+                '   </div>' +
+                '   <div class="ctrl volume">' +
+                '       <div class="separator">' + A.S.s + '</div>' +
+                '       <div class="tip">Vol.:</div>' +
+                '       <div>' + A.S.l + '</div>' +
+                '       <div id="volume' + self.id + '">' + self._renderVolume(5) + '</div>' +
+                '       <div id="level' + self.id + '">88%</div>' +
+                '       <div>' + A.S.r + '</div>' +
+                '   </div>' +
+                '   <div class="tip">' +
+                '       <div class="separator">' + A.S.s + '</div>' +
+                '       <div class="artist">' + self.artist + '</div>' +
+                '       <div class="delimiter">' + A.S.d + '</div>' +
+                '       <a href="' + self.src + '.mp3" target="_blank" class="title">' + self.title + '</a>' +
+                '   </div>' +
+                '</div>';
         var container = document.createElement('p');
         container.className = 'player-container';
         container.innerHTML = templ;
@@ -190,6 +113,11 @@ A.prototype = {
     _setTime:function () {
         var self = this;
         var time = self._timeFormat(self.audio.duration - self.audio.currentTime);
+        self.timeNode.innerHTML = time;
+    },
+    _setControllableTime: function (time) {
+        var self = this;
+        time = self._timeFormat(time);
         self.timeNode.innerHTML = time;
     },
     _setVolumeLevel:function (volumeLevel) {
@@ -241,13 +169,20 @@ A.prototype = {
             self._removeClass(progs[length], 'active');
 
         }
-        if (num !== self.progs.length) {
+        if (num < self.progs.length) {
             progs[num].innerHTML = A.S.o;
             self._addClass(progs[num], 'active');
         }
         else {
-            self._play();
-            self._play();
+            var length = self.progs.length;
+            progs[0].innerHTML = A.S.o;
+            self._addClass(progs[0], 'active');
+            self._pause();
+            self._setControllableTime(self.audio.duration);
+            for (; length--;) {
+                self._addClass(progs[length], 'passive');
+            }
+
         }
 
     },
@@ -291,35 +226,42 @@ A.prototype = {
 
 
         self.playNode.addEventListener('click', function () {
-            self._play();
+            self._playToggle();
+            var length = self.progs.length;
+            var progs = self.progs.nodes;
+            for (; length--;) {
+                self._removeClass(progs[length], 'passive');
+            }
         }, false);
 
 
-//        self.volumeNode.addEventListener('mousedown', function (e) {
-//            self._changeVolume(e.target);
-//        }, false);
-//
-//        self.progressNode.addEventListener('mousedown', function (e) {
-//            self._changeProgress(e.target);
-//        }, false);
-//
-//
-//        if (self._isAudioSuppored()) {
-//            self.audio.addEventListener('canplay', function () {
-//                if (self.preload) {
-//                    self._play();
-//                    self._play();
-//                }
-//                self._bufferisation();
-//            }, false);
-//            self.audio.addEventListener('timeupdate', function () {
-//                self._setTime();
-//                self._setProgressPosition(self.audio.currentTime);
-//            }, false);
-//
-//            self.audio.addEventListener('pause', function () {
-//            }, false);
-//        }
+        self.volumeNode.addEventListener('mousedown', function (e) {
+            self._changeVolume(e.target);
+        }, false);
+
+        self.progressNode.addEventListener('mousedown', function (e) {
+            self._changeProgress(e.target);
+        }, false);
+
+
+        self.audio.addEventListener('canplay', function () {
+            if (self.preload) {
+                self._play();
+                self._pause();
+
+            }
+            if (self.autoplay) {
+                self._play();
+            }
+            self._bufferisation();
+        }, false);
+        self.audio.addEventListener('timeupdate', function () {
+            self._setTime();
+            self._setProgressPosition(self.audio.currentTime);
+        }, false);
+
+        self.audio.addEventListener('pause', function () {
+        }, false);
 
 
     },
@@ -329,13 +271,15 @@ A.prototype = {
             if (self._wasBuffered()) {
                 clearInterval(interval);
             }
+
             self._paintProgressBar();
         }, 1000);
-
     },
     _wasBuffered:function () {
         var self = this;
         return self.audio.buffered.end(0) === self.audio.duration;
+
+
     },
     _paintProgressBar:function () {
         var self = this;
@@ -393,16 +337,24 @@ A.prototype = {
             console.log('Does not loaded!');
         }
     },
-    _play:function () {
+    _playToggle:function () {
         var self = this;
         if (self.audio.paused) {
-            self.audio.play();
-            self.playSymbolNode.innerHTML = A.S.q;
+            self._play();
         } else {
-            self.audio.pause();
-            self.playSymbolNode.innerHTML = A.S.p;
+            self._pause();
         }
 
+    },
+    _play: function() {
+        var self = this;
+        self.audio.play();
+        self.playSymbolNode.innerHTML = A.S.q;
+    },
+    _pause: function() {
+        var self = this;
+        self.audio.pause();
+        self.playSymbolNode.innerHTML = A.S.p;
     },
     _timeFormat:function (secs) {
         var hr = Math.floor(secs / 3600);
@@ -458,7 +410,11 @@ A.prototype = {
             return true;
         }
         return false;
+    },
+    _isOpera: function () {
+        return !!window.opera;
     }
+
 };
 
 A.S = {
@@ -472,5 +428,4 @@ A.S = {
     d:'&nbsp;&mdash;&nbsp;', // artist delimiter
     o:'o' // pimpa
 };
-A.baseUrl = '//inkuzmin.ru/~inkuzmin/ascii-player/flash';
 A.N = 0;
