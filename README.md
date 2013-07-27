@@ -5,4 +5,4 @@ ASCII HTML5 player
 
 Example
 -------
-http://inkuzmin.ru/~inkuzmin/ascii-player/
+http://inkuzmin.github.io/ascii-player/
