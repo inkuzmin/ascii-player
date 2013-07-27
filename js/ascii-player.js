@@ -391,8 +391,13 @@ A.prototype = {
         var self = this;
         oldEl.parentNode.replaceChild(newEl, oldEl);
     },
+<<<<<<< HEAD
     _addClass:function (el, cl) {
         if (!this._hasClass(el, cl))
+=======
+    _addClass: function (el, cl) {
+        if (this._hasClass(el, cl))
+>>>>>>> fdfc5bd5e326289b06a370268a7515dcc0b1a92b
             el.className += ' ' + cl;
     },
     _removeClass:function (el, cl) {
