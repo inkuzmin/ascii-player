@@ -5,15 +5,19 @@
  * Time: 3:27 AM
  */
 
-.myplayer {
+.myplayer, .music-search {
     color: royalBlue;
     cursor: pointer;
     border-bottom: 1px dotted #84b1ff;
 }
 
-.myplayer:hover {
+.myplayer:hover, .music-search:hover {
     color: white;
     border-bottom: 1px solid #efefef;
+}
+
+.music-search {
+    display: inline;
 }
 
 .player-container {
